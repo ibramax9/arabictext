@@ -1,0 +1,52 @@
+body {
+    direction: rtl; /* Set overall page direction to RTL */
+    font-family: 'Tahoma', 'Arial', sans-serif; /* Common Arabic-friendly fonts */
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2 {
+    color: #0056b3; /* A nice blue for headings */
+}
+
+textarea#inputText {
+    width: 98%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    /* Allow bidi text within the textarea itself */
+    unicode-bidi: embed; 
+    direction: rtl; /* Default to RTL for input */
+}
+
+.output-area {
+    width: 98%;
+    min-height: 100px; /* Ensure it has some height even when empty */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #e9ecef;
+    font-size: 16px;
+    white-space: pre-wrap; /* Preserve whitespace and newlines */
+    /* Direction will be controlled by JS, but good to have a default */
+    direction: rtl; 
+}
+
+/* Basic placeholder styling for better visibility */
+textarea#inputText::placeholder {
+    color: #999;
+    font-style: italic;
+}
