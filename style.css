@@ -39,8 +39,9 @@ textarea#inputText {
     border: 1px solid #ddd;
     border-radius: 4px;
     background-color: #e9ecef;
-    font-size: 16px;
+    font-size: 18px;
     white-space: pre-wrap; /* Preserve whitespace and newlines */
+    line-height: 1.8;
     /* Direction will be controlled by JS, but good to have a default */
     direction: rtl; 
 }
@@ -49,4 +50,24 @@ textarea#inputText {
 textarea#inputText::placeholder {
     color: #999;
     font-style: italic;
+}
+
+.controls {
+    margin-bottom: 10px;
+    text-align: left; /* Align buttons to the left, which appears right in RTL */
+}
+
+.controls button {
+    padding: 8px 12px;
+    font-size: 14px;
+    margin-left: 5px; /* This will be margin-right in RTL */
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+
+.controls button:hover {
+    background-color: #0056b3;
 }

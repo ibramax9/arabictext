@@ -2,6 +2,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputText = document.getElementById('inputText');
     const outputText = document.getElementById('outputText');
 
+// Function to determine character type (simplified)
+function getCharDir(char) {
+    const charCode = char.charCodeAt(0);
+    // Arabic characters
+    if ((charCode >= 0x0600 && charCode <= 0x06FF) || 
+        (charCode >= 0x0750 && charCode <= 0x077F) ||
+        (charCode >= 0x08A0 && charCode <= 0x08FF) ||
+        (charCode >= 0xFB50 && charCode <= 0xFDFF) ||
+        (charCode >= 0xFE70 && charCode <= 0xFEFF)) {
+        return 'rtl';
+    } 
+    // Latin characters
+    else if ((charCode >= 0x0041 && charCode <= 0x005A) || // A-Z
+               (charCode >= 0x0061 && charCode <= 0x007A)) { // a-z
+        return 'ltr';
+    } 
+    // Numbers, spaces, and common punctuation are treated as neutral
+    // They will adhere to the direction of the surrounding text or the overall block direction.
+    // More specific handling for punctuation might be needed if issues persist.
+    else if ((charCode >= 0x0030 && charCode <= 0x0039) || // Numbers
+              char.match(/\s/)) { // Whitespace
+        return 'neutral';
+    }
+    // Default for other characters (e.g., less common punctuation, symbols)
+    // This might need adjustment based on observed issues. For now, group with LTR.
+    return 'ltr'; 
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const inputText = document.getElementById('inputText');
+    const outputText = document.getElementById('outputText');
+
     if (inputText && outputText) {
         inputText.addEventListener('input', () => {
             const text = inputText.value;
@@ -26,42 +58,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 outputText.style.direction = 'ltr';
             }
 
-            // Regex to split by spaces and newlines, keeping the delimiters
-            const segments = text.split(/(\s+)/); 
+            // New Segmentation Logic Starts Here:
+            let currentSegment = "";
+            let currentDir = ""; // This will hold the determined direction ('ltr' or 'rtl') of the current segment
 
-            segments.forEach(segment => {
-                if (segment.length === 0) return;
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                let charDirType = getCharDir(char); // 'rtl', 'ltr', or 'neutral'
 
-                // Check if it's a whitespace segment
-                if (segment.match(/^\s+$/)) {
-                    outputText.appendChild(document.createTextNode(segment));
-                    return;
-                }
-
-                const span = document.createElement('span');
-                span.innerText = segment;
-                
-                // Check for Arabic characters in the segment
-                let containsArabic = false;
-                for (let i = 0; i < segment.length; i++) {
-                    const charCode = segment.charCodeAt(i);
-                    if ((charCode >= 0x0600 && charCode <= 0x06FF) ||
-                        (charCode >= 0x0750 && charCode <= 0x077F) ||
-                        (charCode >= 0x08A0 && charCode <= 0x08FF) ||
-                        (charCode >= 0xFB50 && charCode <= 0xFDFF) ||
-                        (charCode >= 0xFE70 && charCode <= 0xFEFF)) {
-                        containsArabic = true;
-                        break;
+                if (currentDir === "") { // Initializing for the very first character
+                    currentSegment += char;
+                    if (charDirType !== 'neutral') {
+                        currentDir = charDirType;
                     }
-                }
-                
-                if (containsArabic) {
-                    span.dir = 'rtl';
+                    // If first char is neutral, currentDir remains empty, will be set by next non-neutral
+                    // or defaults to outputText.style.direction at span creation.
+                } else if (charDirType === currentDir || charDirType === 'neutral') {
+                    // Character continues current direction or is neutral
+                    currentSegment += char;
+                    if (currentDir === '' && charDirType !== 'neutral') { 
+                        // This happens if the segment started with neutral chars
+                        currentDir = charDirType;
+                    }
                 } else {
-                    span.dir = 'ltr';
+                    // Direction has changed (e.g., from rtl to ltr or vice-versa)
+                    // Finalize and append the previous segment
+                    if (currentSegment) {
+                        const span = document.createElement('span');
+                        span.innerText = currentSegment;
+                        // If currentDir is still not set (e.g. all-neutral segment), use outputText's direction
+                        span.dir = currentDir || outputText.style.direction || 'rtl'; 
+                        outputText.appendChild(span);
+                    }
+                    // Start new segment
+                    currentSegment = char;
+                    currentDir = charDirType === 'neutral' ? '' : charDirType; // Reset currentDir if new char is neutral
                 }
+            }
+
+            // Append the very last segment
+            if (currentSegment) {
+                const span = document.createElement('span');
+                span.innerText = currentSegment;
+                span.dir = currentDir || outputText.style.direction || 'rtl';
                 outputText.appendChild(span);
-            });
+            }
+            // New Segmentation Logic Ends Here.
 
             // Ensure the textarea itself also allows for mixed text input without going haywire
             // by setting its direction based on the first character typed,
@@ -84,5 +126,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     } else {
         console.error('Input or output element not found!');
+    }
+
+    // Font size controls
+    const increaseFontBtn = document.getElementById('increaseFontBtn');
+    const decreaseFontBtn = document.getElementById('decreaseFontBtn');
+    let currentFontSize = 18; // Initial font size, matching CSS
+
+    if (outputText && increaseFontBtn && decreaseFontBtn) {
+        const updateFontSize = () => {
+            outputText.style.fontSize = `${currentFontSize}px`;
+        };
+
+        increaseFontBtn.addEventListener('click', () => {
+            currentFontSize += 2;
+            updateFontSize();
+        });
+
+        decreaseFontBtn.addEventListener('click', () => {
+            if (currentFontSize > 8) { // Set a minimum font size
+                currentFontSize -= 2;
+                updateFontSize();
+            }
+        });
+
+        // Initialize font size
+        updateFontSize();
+    } else {
+        console.error('Font control buttons or outputText element not found!');
     }
 });
